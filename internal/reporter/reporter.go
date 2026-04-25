@@ -29,15 +29,15 @@ func (r *Reporter) PrintPortTable(ports []models.PortProcess) {
 	}
 
 	header := color.New(color.Bold).SprintFunc()
-	fmt.Fprintln(r.tw, header("PORT\tPROTOCOL\tPROCESS\tPID\tUSER\tAGE"))
-	fmt.Fprintln(r.tw, strings.Repeat("─", 60))
+	_, _ = fmt.Fprintln(r.tw, header("PORT\tPROTOCOL\tPROCESS\tPID\tUSER\tAGE"))
+	_, _ = fmt.Fprintln(r.tw, strings.Repeat("─", 60))
 
 	for _, p := range ports {
-		fmt.Fprintf(r.tw, "%d\t%s\t%s\t%d\t%s\t%s\n",
+		_, _ = fmt.Fprintf(r.tw, "%d\t%s\t%s\t%d\t%s\t%s\n",
 			p.Port, p.Protocol, p.Process, p.PID, p.User, p.Age)
 	}
 
-	r.tw.Flush()
+	_ = r.tw.Flush()
 }
 
 // PrintStatus prints a status message.

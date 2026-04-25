@@ -13,6 +13,7 @@ var rootCmd = &cobra.Command{
 kill processes by port, find next free ports, and monitor project services.`,
 }
 
+// Execute runs the root command.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
