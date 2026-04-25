@@ -13,6 +13,11 @@ var rootCmd = &cobra.Command{
 kill processes by port, find next free ports, and monitor project services.`,
 }
 
+// SetVersionInfo sets the version info for the CLI.
+func SetVersionInfo(version, commit, date string) {
+	rootCmd.Version = version
+}
+
 // Execute runs the root command.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
