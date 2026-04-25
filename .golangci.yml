@@ -12,8 +12,6 @@ linters:
     - ineffassign
     - staticcheck
     - unused
-    - gofmt
-    - goimports
     - misspell
     - revive
 
@@ -25,3 +23,7 @@ linters:
             - checkPrivateReceivers
             - sayRepetitiveInsteadOfStutters
 
+formatters:
+  enable:
+    - gofmt
+    - goimports
