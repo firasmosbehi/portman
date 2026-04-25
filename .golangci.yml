@@ -25,4 +25,3 @@ linters:
             - checkPrivateReceivers
             - sayRepetitiveInsteadOfStutters
 
-issues:
