@@ -1,6 +1,7 @@
 package scanner
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/firasmosbehi/portman/internal/platform"
@@ -44,7 +45,7 @@ func (s *Scanner) IsPortFree(port int) (bool, error) {
 	if err == nil {
 		return false, nil
 	}
-	if err == platform.ErrProcessNotFound {
+	if errors.Is(err, platform.ErrProcessNotFound) {
 		return true, nil
 	}
 	return false, err

@@ -53,13 +53,14 @@ func TestListCmdWithPort(t *testing.T) {
 }
 
 func TestCheckCmd(t *testing.T) {
+	// Port 3000 may be free or in use depending on the system.
 	out, err := executeCommand("check", "3000")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !strings.Contains(out, "Checking port 3000") {
+	// Output should contain either "free" or "in use".
+	if !strings.Contains(out, "Port 3000 is free") && !strings.Contains(out, "Port 3000 is in use") {
 		t.Errorf("unexpected output: %q", out)
 	}
+	// We don't assert err here because it depends on whether port 3000 is in use.
+	_ = err
 }
 
 func TestCheckCmdInvalidPort(t *testing.T) {

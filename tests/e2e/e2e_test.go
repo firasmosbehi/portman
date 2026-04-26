@@ -84,10 +84,10 @@ func TestE2E_CheckFreePort(t *testing.T) {
 
 	out, _, err := runBinary("check", strconv.Itoa(port))
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Fatalf("expected no error for free port, got: %v", err)
 	}
-	if !strings.Contains(out, "Checking port") {
-		t.Errorf("unexpected output: %s", out)
+	if !strings.Contains(out, "is free") {
+		t.Errorf("expected 'is free' in output, got: %s", out)
 	}
 }
 
@@ -100,11 +100,11 @@ func TestE2E_CheckOccupiedPort(t *testing.T) {
 	port := ln.Addr().(*net.TCPAddr).Port
 
 	out, _, err := runBinary("check", strconv.Itoa(port))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if err == nil {
+		t.Fatal("expected non-zero exit for occupied port")
 	}
-	if !strings.Contains(out, "Checking port") {
-		t.Errorf("unexpected output: %s", out)
+	if !strings.Contains(out, "is in use") {
+		t.Errorf("expected 'is in use' in output, got: %s", out)
 	}
 }
 

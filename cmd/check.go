@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/firasmosbehi/portman/internal/scanner"
 	"github.com/spf13/cobra"
 )
 
@@ -16,8 +17,25 @@ var checkCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("invalid port: %s", args[0])
 		}
-		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Checking port %d (not yet implemented)\n", port)
-		return nil
+
+		s := scanner.NewScanner()
+		free, err := s.IsPortFree(port)
+		if err != nil {
+			return err
+		}
+
+		if free {
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Port %d is free\n", port)
+			return nil
+		}
+
+		p, err := s.FindProcessByPort(port)
+		if err != nil {
+			return err
+		}
+
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Port %d is in use by %s (pid %d)\n", port, p.Process, p.PID)
+		return fmt.Errorf("port %d is in use", port)
 	},
 }
 
