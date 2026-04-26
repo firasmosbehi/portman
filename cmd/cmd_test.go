@@ -159,7 +159,7 @@ func TestKillCmdForceNotFound(t *testing.T) {
 
 func TestKillCmdAbort(t *testing.T) {
 	port, listener := startTestListener(t)
-	defer listener.Process.Kill()
+	defer func() { _ = listener.Process.Kill() }()
 
 	out, err := executeCommandStdin(strings.NewReader("n\n"), "kill", strconv.Itoa(port))
 	if err != nil {
@@ -172,7 +172,7 @@ func TestKillCmdAbort(t *testing.T) {
 
 func TestKillCmdForce(t *testing.T) {
 	port, listener := startTestListener(t)
-	defer listener.Process.Kill()
+	defer func() { _ = listener.Process.Kill() }()
 
 	out, err := executeCommand("kill", strconv.Itoa(port), "--force")
 	if err != nil {
