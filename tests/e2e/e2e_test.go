@@ -113,8 +113,12 @@ func TestE2E_Next(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(out, "30000-30010") {
-		t.Errorf("unexpected output: %s", out)
+	port, err := strconv.Atoi(strings.TrimSpace(out))
+	if err != nil {
+		t.Fatalf("expected numeric port, got: %s", out)
+	}
+	if port < 30000 || port > 30010 {
+		t.Errorf("expected port in range 30000-30010, got %d", port)
 	}
 }
 

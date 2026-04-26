@@ -35,6 +35,7 @@ func executeCommandStdin(stdin io.Reader, args ...string) (string, error) {
 	// Reset persistent flags so they don't leak across tests.
 	killForceFlag = false
 	listPortFlag = 0
+	nextRangeFlag = "3000-3100"
 	return buf.String(), err
 }
 
@@ -195,8 +196,13 @@ func TestNextCmd(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(out, "3000-3100") {
-		t.Errorf("unexpected output: %q", out)
+	// Output should be a port number in the default range.
+	port, err := strconv.Atoi(strings.TrimSpace(out))
+	if err != nil {
+		t.Fatalf("expected numeric port, got: %q", out)
+	}
+	if port < 3000 || port > 3100 {
+		t.Errorf("expected port in range 3000-3100, got %d", port)
 	}
 }
 
@@ -205,8 +211,12 @@ func TestNextCmdWithRange(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(out, "4000-4010") {
-		t.Errorf("unexpected output: %q", out)
+	port, err := strconv.Atoi(strings.TrimSpace(out))
+	if err != nil {
+		t.Fatalf("expected numeric port, got: %q", out)
+	}
+	if port < 4000 || port > 4010 {
+		t.Errorf("expected port in range 4000-4010, got %d", port)
 	}
 }
 
