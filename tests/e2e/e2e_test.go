@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 	}
 
 	code := m.Run()
-	os.Remove(binaryPath)
+	_ = os.Remove(binaryPath)
 	os.Exit(code)
 }
 
@@ -79,7 +79,7 @@ func TestE2E_CheckFreePort(t *testing.T) {
 		t.Fatal(err)
 	}
 	port := ln.Addr().(*net.TCPAddr).Port
-	ln.Close()
+	_ = ln.Close()
 
 	out, _, err := runBinary("check", strconv.Itoa(port))
 	if err != nil {
@@ -150,11 +150,11 @@ func TestE2E_RealHTTPPort(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("ok"))
+		_, _ = w.Write([]byte("ok"))
 	})
 	server := &http.Server{Handler: mux}
-	go server.Serve(ln)
-	defer server.Close()
+	go func() { _ = server.Serve(ln) }()
+	defer func() { _ = server.Close() }()
 
 	// Give the server a moment to start
 	time.Sleep(50 * time.Millisecond)
