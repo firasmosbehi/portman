@@ -1,10 +1,14 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
+	"os"
+	"os/signal"
 	"strconv"
 	"time"
 
+	"github.com/firasmosbehi/portman/internal/scanner"
 	"github.com/spf13/cobra"
 )
 
@@ -19,12 +23,47 @@ var watchCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("invalid port: %s", args[0])
 		}
-		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Watching port %d every %v (not yet implemented)\n", port, watchIntervalFlag)
-		return nil
+
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+		defer stop()
+
+		s := scanner.NewScanner()
+
+		// Check immediately first
+		free, err := s.IsPortFree(port)
+		if err != nil {
+			return err
+		}
+		if free {
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Port %d is already available\n", port)
+			return nil
+		}
+
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Waiting for port %d... (press Ctrl+C to cancel)\n", port)
+
+		ticker := time.NewTicker(watchIntervalFlag)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), "\nCancelled.")
+				return nil
+			case <-ticker.C:
+				free, err := s.IsPortFree(port)
+				if err != nil {
+					return err
+				}
+				if free {
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Port %d is now available\n", port)
+					return nil
+				}
+			}
+		}
 	},
 }
 
 func init() {
-	watchCmd.Flags().DurationVarP(&watchIntervalFlag, "interval", "i", time.Second, "Polling interval")
+	watchCmd.Flags().DurationVarP(&watchIntervalFlag, "interval", "i", 1*time.Second, "Polling interval")
 	rootCmd.AddCommand(watchCmd)
 }

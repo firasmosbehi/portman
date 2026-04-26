@@ -36,6 +36,7 @@ func executeCommandStdin(stdin io.Reader, args ...string) (string, error) {
 	killForceFlag = false
 	listPortFlag = 0
 	nextRangeFlag = "3000-3100"
+	watchIntervalFlag = 0
 	return buf.String(), err
 }
 
