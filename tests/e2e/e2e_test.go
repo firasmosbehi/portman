@@ -67,7 +67,8 @@ func TestE2E_List(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(out, "Listing all listening ports") {
+	// Output is either a table with PORT header or a "no ports" message.
+	if !strings.Contains(out, "PORT") && !strings.Contains(out, "No listening ports found") {
 		t.Errorf("unexpected output: %s", out)
 	}
 }
@@ -159,13 +160,13 @@ func TestE2E_RealHTTPPort(t *testing.T) {
 	// Give the server a moment to start
 	time.Sleep(50 * time.Millisecond)
 
-	// Verify list command sees the port
+	// Verify list command runs successfully
 	out, _, err := runBinary("list")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	// The list command is still a stub, so we just verify it runs
-	if !strings.Contains(out, "Listing all listening ports") {
+	// Output is either a table with PORT header or a "no ports" message.
+	if !strings.Contains(out, "PORT") && !strings.Contains(out, "No listening ports found") {
 		t.Errorf("unexpected output: %s", out)
 	}
 }

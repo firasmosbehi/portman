@@ -35,7 +35,8 @@ func TestListCmd(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(out, "Listing all listening ports") {
+	// Output is either a table with PORT header or a "no ports" message.
+	if !strings.Contains(out, "PORT") && !strings.Contains(out, "No listening ports found") {
 		t.Errorf("unexpected output: %q", out)
 	}
 }
@@ -45,6 +46,7 @@ func TestListCmdWithPort(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+	// Port 3000 may be in use (table) or free (message); both contain "3000".
 	if !strings.Contains(out, "3000") {
 		t.Errorf("unexpected output: %q", out)
 	}
