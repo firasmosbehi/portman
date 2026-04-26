@@ -18,8 +18,8 @@ func TestNewReporter(t *testing.T) {
 }
 
 func TestPrintPortTableNoColor(t *testing.T) {
-	os.Setenv("NO_COLOR", "1")
-	defer os.Unsetenv("NO_COLOR")
+	_ = os.Setenv("NO_COLOR", "1")
+	defer func() { _ = os.Unsetenv("NO_COLOR") }()
 
 	buf := new(bytes.Buffer)
 	r := NewReporterWithWriter(buf)
@@ -43,7 +43,7 @@ func TestPrintPortTableNoColor(t *testing.T) {
 }
 
 func TestPrintPortTableWithColor(t *testing.T) {
-	os.Unsetenv("NO_COLOR")
+	_ = os.Unsetenv("NO_COLOR")
 
 	buf := new(bytes.Buffer)
 	r := NewReporterWithWriter(buf)
@@ -61,8 +61,8 @@ func TestPrintPortTableWithColor(t *testing.T) {
 }
 
 func TestPrintPortTableEmpty(t *testing.T) {
-	os.Setenv("NO_COLOR", "1")
-	defer os.Unsetenv("NO_COLOR")
+	_ = os.Setenv("NO_COLOR", "1")
+	defer func() { _ = os.Unsetenv("NO_COLOR") }()
 
 	buf := new(bytes.Buffer)
 	r := NewReporterWithWriter(buf)

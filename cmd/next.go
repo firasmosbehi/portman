@@ -12,7 +12,7 @@ var nextCmd = &cobra.Command{
 	Use:   "next",
 	Short: "Suggest the next available port in a range",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Fprintf(cmd.OutOrStdout(), "Finding next available port in range %s (not yet implemented)\n", nextRangeFlag)
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Finding next available port in range %s (not yet implemented)\n", nextRangeFlag)
 		return nil
 	},
 }

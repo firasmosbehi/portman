@@ -13,10 +13,10 @@ var listCmd = &cobra.Command{
 	Short: "List all listening ports with process info",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if listPortFlag != 0 {
-			fmt.Fprintf(cmd.OutOrStdout(), "Listing port %d (not yet implemented)\n", listPortFlag)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Listing port %d (not yet implemented)\n", listPortFlag)
 			return nil
 		}
-		fmt.Fprintln(cmd.OutOrStdout(), "Listing all listening ports (not yet implemented)")
+		_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Listing all listening ports (not yet implemented)")
 		return nil
 	},
 }
