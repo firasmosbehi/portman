@@ -26,11 +26,23 @@ jobs:
           go-version: stable
           cache: false
 
+      - name: Determine GoReleaser args
+        id: args
+        env:
+          HAS_BREW_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN != '' }}
+        run: |
+          if [ "$HAS_BREW_TOKEN" = "true" ]; then
+            echo "args=release --clean" >> "$GITHUB_OUTPUT"
+          else
+            echo "args=release --clean --skip=brew" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: "~> v2"
-          args: release --clean
+          args: ${{ steps.args.outputs.args }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}

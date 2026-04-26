@@ -20,6 +20,9 @@ func TestMain(m *testing.M) {
 	_, thisFile, _, _ := runtime.Caller(0)
 	projectRoot := filepath.Join(thisFile, "..", "..", "..")
 	binaryPath = filepath.Join(projectRoot, "portman_e2e")
+	if runtime.GOOS == "windows" {
+		binaryPath += ".exe"
+	}
 
 	build := exec.Command("go", "build", "-o", binaryPath, ".")
 	build.Dir = projectRoot

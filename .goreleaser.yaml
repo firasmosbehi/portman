@@ -45,6 +45,21 @@ checksum:
 snapshot:
   version_template: "{{ incpatch .Version }}-next"
 
+brews:
+  - name: portman
+    repository:
+      owner: firasmosbehi
+      name: homebrew-tap
+      branch: main
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    homepage: "https://github.com/firasmosbehi/portman"
+    description: "A clean CLI for managing local ports and processes"
+    license: "MIT"
+    test: |
+      system "#{bin}/portman", "--version"
+    install: |
+      bin.install "portman"
+
 changelog:
   sort: asc
   filters:
