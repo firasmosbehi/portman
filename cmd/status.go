@@ -10,7 +10,7 @@ var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Check project services against portman.yml registry",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("Checking project status (not yet implemented)")
+		fmt.Fprintln(cmd.OutOrStdout(), "Checking project status (not yet implemented)")
 		return nil
 	},
 }

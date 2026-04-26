@@ -12,6 +12,11 @@ import (
 	"github.com/firasmosbehi/portman/pkg/models"
 )
 
+// ssRunner abstracts the ss command for testability.
+var ssRunner = func() ([]byte, error) {
+	return exec.Command("ss", "-tulnp").Output()
+}
+
 // Resolver implements port and process resolution for Linux.
 type Resolver struct{}
 
@@ -22,7 +27,7 @@ func NewResolver() *Resolver {
 
 // GetListeningPorts returns all listening ports with process info.
 func (r *Resolver) GetListeningPorts() ([]models.PortProcess, error) {
-	out, err := exec.Command("ss", "-tulnp").Output()
+	out, err := ssRunner()
 	if err != nil {
 		if len(out) == 0 {
 			return nil, fmt.Errorf("ss failed: %w", err)
@@ -42,7 +47,7 @@ func (r *Resolver) GetProcessByPort(port int) (*models.PortProcess, error) {
 			return &p, nil
 		}
 	}
-	return nil, fmt.Errorf("no process found on port %d", port)
+	return nil, fmt.Errorf("%w %d", ErrProcessNotFound, port)
 }
 
 // processRe extracts the first process name and PID from ss -p output.

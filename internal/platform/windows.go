@@ -12,6 +12,16 @@ import (
 	"github.com/firasmosbehi/portman/pkg/models"
 )
 
+// netstatRunner abstracts the netstat command for testability.
+var netstatRunner = func() ([]byte, error) {
+	return exec.Command("netstat", "-ano").Output()
+}
+
+// tasklistRunner abstracts the tasklist command for testability.
+var tasklistRunner = func() ([]byte, error) {
+	return exec.Command("tasklist", "/FO", "CSV").Output()
+}
+
 // Resolver implements port and process resolution for Windows.
 type Resolver struct{}
 
@@ -22,7 +32,7 @@ func NewResolver() *Resolver {
 
 // GetListeningPorts returns all listening ports with process info.
 func (r *Resolver) GetListeningPorts() ([]models.PortProcess, error) {
-	netstatOut, err := exec.Command("netstat", "-ano").Output()
+	netstatOut, err := netstatRunner()
 	if err != nil {
 		return nil, fmt.Errorf("netstat failed: %w", err)
 	}
@@ -33,7 +43,7 @@ func (r *Resolver) GetListeningPorts() ([]models.PortProcess, error) {
 	}
 
 	if len(ports) > 0 {
-		tasklistOut, err := exec.Command("tasklist", "/FO", "CSV").Output()
+		tasklistOut, err := tasklistRunner()
 		if err == nil {
 			pidToName := parseTasklistOutput(string(tasklistOut))
 			for i := range ports {
@@ -58,7 +68,7 @@ func (r *Resolver) GetProcessByPort(port int) (*models.PortProcess, error) {
 			return &p, nil
 		}
 	}
-	return nil, fmt.Errorf("no process found on port %d", port)
+	return nil, fmt.Errorf("%w %d", ErrProcessNotFound, port)
 }
 
 // parseNetstatOutput parses the output of netstat -ano.

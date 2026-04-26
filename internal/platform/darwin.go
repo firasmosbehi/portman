@@ -14,6 +14,11 @@ import (
 	"github.com/firasmosbehi/portman/pkg/models"
 )
 
+// lsofRunner abstracts the lsof command for testability.
+var lsofRunner = func() ([]byte, error) {
+	return exec.Command("lsof", "-i", "-P", "-n", "-F").Output()
+}
+
 // Resolver implements port and process resolution for macOS.
 type Resolver struct{}
 
@@ -24,7 +29,7 @@ func NewResolver() *Resolver {
 
 // GetListeningPorts returns all listening ports with process info.
 func (r *Resolver) GetListeningPorts() ([]models.PortProcess, error) {
-	out, err := exec.Command("lsof", "-i", "-P", "-n", "-F").Output()
+	out, err := lsofRunner()
 	if err != nil {
 		// lsof often exits 1 with partial output; if we have data, parse it.
 		if len(out) == 0 {
@@ -45,7 +50,7 @@ func (r *Resolver) GetProcessByPort(port int) (*models.PortProcess, error) {
 			return &p, nil
 		}
 	}
-	return nil, fmt.Errorf("no process found on port %d", port)
+	return nil, fmt.Errorf("%w %d", ErrProcessNotFound, port)
 }
 
 // fileEntry holds the parsed fields for a single open file within a process.

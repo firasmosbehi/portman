@@ -24,3 +24,8 @@ func Execute() {
 		os.Exit(1)
 	}
 }
+
+// ExecuteC runs the root command and returns any error.
+func ExecuteC() error {
+	return rootCmd.Execute()
+}

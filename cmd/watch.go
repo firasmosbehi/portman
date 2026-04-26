@@ -19,7 +19,7 @@ var watchCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("invalid port: %s", args[0])
 		}
-		fmt.Printf("Watching port %d every %v (not yet implemented)\n", port, watchIntervalFlag)
+		fmt.Fprintf(cmd.OutOrStdout(), "Watching port %d every %v (not yet implemented)\n", port, watchIntervalFlag)
 		return nil
 	},
 }

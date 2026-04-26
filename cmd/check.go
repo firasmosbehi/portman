@@ -16,7 +16,7 @@ var checkCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("invalid port: %s", args[0])
 		}
-		fmt.Printf("Checking port %d (not yet implemented)\n", port)
+		fmt.Fprintf(cmd.OutOrStdout(), "Checking port %d (not yet implemented)\n", port)
 		return nil
 	},
 }

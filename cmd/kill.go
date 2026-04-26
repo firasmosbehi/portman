@@ -18,7 +18,7 @@ var killCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("invalid port: %s", args[0])
 		}
-		fmt.Printf("Killing process on port %d (force=%v) (not yet implemented)\n", port, killForceFlag)
+		fmt.Fprintf(cmd.OutOrStdout(), "Killing process on port %d (force=%v) (not yet implemented)\n", port, killForceFlag)
 		return nil
 	},
 }

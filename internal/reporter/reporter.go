@@ -2,6 +2,7 @@ package reporter
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"text/tabwriter"
@@ -12,13 +13,20 @@ import (
 
 // Reporter handles terminal output formatting.
 type Reporter struct {
-	tw *tabwriter.Writer
+	out io.Writer
+	tw  *tabwriter.Writer
 }
 
 // NewReporter creates a new reporter.
 func NewReporter() *Reporter {
+	return NewReporterWithWriter(os.Stdout)
+}
+
+// NewReporterWithWriter creates a new reporter that writes to w.
+func NewReporterWithWriter(w io.Writer) *Reporter {
 	return &Reporter{
-		tw: tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0),
+		out: w,
+		tw:  tabwriter.NewWriter(w, 0, 0, 2, ' ', 0),
 	}
 }
 
@@ -42,15 +50,15 @@ func (r *Reporter) PrintPortTable(ports []models.PortProcess) {
 
 // PrintStatus prints a status message.
 func (r *Reporter) PrintStatus(msg string) {
-	fmt.Println(msg)
+	_, _ = fmt.Fprintln(r.out, msg)
 }
 
 // PrintError prints an error message.
 func (r *Reporter) PrintError(err error) {
-	color.Red("Error: %v\n", err)
+	_, _ = fmt.Fprintf(r.out, "Error: %v\n", err)
 }
 
 // PrintSuccess prints a success message.
 func (r *Reporter) PrintSuccess(msg string) {
-	color.Green("✓ %s\n", msg)
+	_, _ = fmt.Fprintf(r.out, "✓ %s\n", msg)
 }
