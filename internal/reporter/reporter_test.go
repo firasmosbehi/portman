@@ -102,3 +102,47 @@ func TestPrintSuccess(t *testing.T) {
 		t.Errorf("unexpected output: %q", buf.String())
 	}
 }
+
+func TestPrintServiceStatusTable(t *testing.T) {
+	_ = os.Setenv("NO_COLOR", "1")
+	defer func() { _ = os.Unsetenv("NO_COLOR") }()
+
+	buf := new(bytes.Buffer)
+	r := NewReporterWithWriter(buf)
+	statuses := []models.ServiceStatus{
+		{Name: "web", Expected: 3000, Actual: "3000", Status: "running", Healthy: true},
+		{Name: "db", Expected: 5432, Actual: "-", Status: "not running", Healthy: false},
+	}
+	r.PrintServiceStatusTable(statuses)
+	out := buf.String()
+
+	if !strings.Contains(out, "SERVICE") {
+		t.Error("expected output to contain SERVICE header")
+	}
+	if !strings.Contains(out, "web") {
+		t.Error("expected output to contain 'web'")
+	}
+	if !strings.Contains(out, "db") {
+		t.Error("expected output to contain 'db'")
+	}
+	if !strings.Contains(out, "Some services are not healthy") {
+		t.Errorf("expected unhealthy summary, got: %q", out)
+	}
+}
+
+func TestPrintServiceStatusTableAllHealthy(t *testing.T) {
+	_ = os.Setenv("NO_COLOR", "1")
+	defer func() { _ = os.Unsetenv("NO_COLOR") }()
+
+	buf := new(bytes.Buffer)
+	r := NewReporterWithWriter(buf)
+	statuses := []models.ServiceStatus{
+		{Name: "api", Expected: 3001, Actual: "3001", Status: "running", Healthy: true},
+	}
+	r.PrintServiceStatusTable(statuses)
+	out := buf.String()
+
+	if !strings.Contains(out, "All services healthy") {
+		t.Errorf("expected healthy summary, got: %q", out)
+	}
+}

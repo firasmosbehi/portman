@@ -238,13 +238,35 @@ func TestWatchCmdInvalidPort(t *testing.T) {
 	}
 }
 
-func TestStatusCmd(t *testing.T) {
+func TestStatusCmdNoConfig(t *testing.T) {
 	out, err := executeCommand("status")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(out, "Checking project status") {
+	if !strings.Contains(out, "No portman.yml found") {
 		t.Errorf("unexpected output: %q", out)
+	}
+}
+
+func TestStatusCmdWithConfig(t *testing.T) {
+	content := `services:
+  - name: test-svc
+    port: 49998
+`
+	if err := os.WriteFile("portman.yml", []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.Remove("portman.yml") }()
+
+	out, err := executeCommand("status")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "test-svc") {
+		t.Errorf("expected 'test-svc' in output, got: %q", out)
+	}
+	if !strings.Contains(out, "not running") {
+		t.Errorf("expected 'not running' in output, got: %q", out)
 	}
 }
 

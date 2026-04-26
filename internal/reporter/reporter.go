@@ -62,3 +62,37 @@ func (r *Reporter) PrintError(err error) {
 func (r *Reporter) PrintSuccess(msg string) {
 	_, _ = fmt.Fprintf(r.out, "✓ %s\n", msg)
 }
+
+// PrintServiceStatusTable prints a table of service statuses.
+func (r *Reporter) PrintServiceStatusTable(statuses []models.ServiceStatus) {
+	if os.Getenv("NO_COLOR") == "" {
+		color.NoColor = false
+	}
+
+	header := color.New(color.Bold).SprintFunc()
+	_, _ = fmt.Fprintln(r.tw, header("SERVICE\tEXPECTED\tACTUAL\tSTATUS"))
+	_, _ = fmt.Fprintln(r.tw, strings.Repeat("─", 55))
+
+	green := color.New(color.FgGreen).SprintFunc()
+	red := color.New(color.FgRed).SprintFunc()
+
+	allHealthy := true
+	for _, s := range statuses {
+		var statusStr string
+		if s.Healthy {
+			statusStr = green("✓ " + s.Status)
+		} else {
+			statusStr = red("✗ " + s.Status)
+			allHealthy = false
+		}
+		_, _ = fmt.Fprintf(r.tw, "%s\t%d\t%s\t%s\n", s.Name, s.Expected, s.Actual, statusStr)
+	}
+
+	_ = r.tw.Flush()
+
+	if allHealthy {
+		_, _ = fmt.Fprintln(r.out, green("\nAll services healthy."))
+	} else {
+		_, _ = fmt.Fprintln(r.out, red("\nSome services are not healthy."))
+	}
+}

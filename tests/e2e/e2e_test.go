@@ -127,7 +127,8 @@ func TestE2E_Status(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(out, "Checking project status") {
+	// E2E runs from tests/e2e dir where no portman.yml exists.
+	if !strings.Contains(out, "No portman.yml found") {
 		t.Errorf("unexpected output: %s", out)
 	}
 }
