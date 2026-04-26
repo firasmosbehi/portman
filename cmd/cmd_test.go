@@ -1,9 +1,16 @@
 package cmd
 
 import (
+	"bufio"
 	"bytes"
+	"io"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 func init() {
@@ -11,13 +18,71 @@ func init() {
 }
 
 func executeCommand(args ...string) (string, error) {
+	return executeCommandStdin(nil, args...)
+}
+
+func executeCommandStdin(stdin io.Reader, args ...string) (string, error) {
 	buf := new(bytes.Buffer)
 	rootCmd.SetOut(buf)
 	rootCmd.SetErr(buf)
+	if stdin != nil {
+		rootCmd.SetIn(stdin)
+	}
 	rootCmd.SetArgs(args)
 	err := rootCmd.Execute()
 	rootCmd.SetArgs([]string{})
+	rootCmd.SetIn(nil)
+	// Reset persistent flags so they don't leak across tests.
+	killForceFlag = false
+	listPortFlag = 0
 	return buf.String(), err
+}
+
+// startTestListener starts a child Go process that listens on a random TCP port.
+func startTestListener(t *testing.T) (int, *exec.Cmd) {
+	code := `package main
+import (
+	"fmt"
+	"net"
+	"net/http"
+	"os"
+)
+func main() {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		os.Exit(1)
+	}
+	fmt.Println(ln.Addr().(*net.TCPAddr).Port)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
+	http.Serve(ln, nil)
+}`
+	dir := t.TempDir()
+	src := filepath.Join(dir, "main.go")
+	if err := os.WriteFile(src, []byte(code), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	cmd := exec.Command("go", "run", src)
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+
+	reader := bufio.NewReader(stdout)
+	line, err := reader.ReadString('\n')
+	if err != nil {
+		t.Fatal(err)
+	}
+	port, err := strconv.Atoi(strings.TrimSpace(line))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	time.Sleep(50 * time.Millisecond)
+	return port, cmd
 }
 
 func TestRootCmd(t *testing.T) {
@@ -77,23 +142,44 @@ func TestCheckCmdMissingArg(t *testing.T) {
 	}
 }
 
-func TestKillCmd(t *testing.T) {
-	out, err := executeCommand("kill", "8080")
+func TestKillCmdPortNotFound(t *testing.T) {
+	// Use a high ephemeral port that is almost certainly free.
+	_, err := executeCommand("kill", "49999")
+	if err == nil {
+		t.Fatal("expected error when port is not in use")
+	}
+}
+
+func TestKillCmdForceNotFound(t *testing.T) {
+	_, err := executeCommand("kill", "49999", "--force")
+	if err == nil {
+		t.Fatal("expected error when port is not in use")
+	}
+}
+
+func TestKillCmdAbort(t *testing.T) {
+	port, listener := startTestListener(t)
+	defer listener.Process.Kill()
+
+	out, err := executeCommandStdin(strings.NewReader("n\n"), "kill", strconv.Itoa(port))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(out, "8080") {
-		t.Errorf("unexpected output: %q", out)
+	if !strings.Contains(out, "Aborted") {
+		t.Errorf("expected 'Aborted' in output, got: %q", out)
 	}
 }
 
 func TestKillCmdForce(t *testing.T) {
-	out, err := executeCommand("kill", "8080", "--force")
+	port, listener := startTestListener(t)
+	defer listener.Process.Kill()
+
+	out, err := executeCommand("kill", strconv.Itoa(port), "--force")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(out, "force=true") {
-		t.Errorf("unexpected output: %q", out)
+	if !strings.Contains(out, "Killed") {
+		t.Errorf("expected 'Killed' in output, got: %q", out)
 	}
 }
 
