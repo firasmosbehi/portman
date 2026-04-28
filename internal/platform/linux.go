@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/firasmosbehi/portman/pkg/models"
 )
@@ -15,6 +16,19 @@ import (
 // ssRunner abstracts the ss command for testability.
 var ssRunner = func() ([]byte, error) {
 	return exec.Command("ss", "-tulnp").Output()
+}
+
+// psEtimeRunner abstracts the ps command for testability.
+var psEtimeRunner = func(pid int) ([]byte, error) {
+	return exec.Command("ps", "-p", strconv.Itoa(pid), "-o", "etime=").Output()
+}
+
+func getProcessAge(pid int) (time.Duration, error) {
+	out, err := psEtimeRunner(pid)
+	if err != nil {
+		return 0, err
+	}
+	return parsePsEtime(string(out))
 }
 
 // Resolver implements port and process resolution for Linux.
@@ -103,6 +117,15 @@ func parseSsOutput(output string) ([]models.PortProcess, error) {
 			Process:  process,
 			PID:      pid,
 		})
+	}
+
+	// Populate age for each unique PID.
+	for i := range results {
+		if results[i].PID > 0 {
+			if age, err := getProcessAge(results[i].PID); err == nil {
+				results[i].Age = age
+			}
+		}
 	}
 
 	return results, nil

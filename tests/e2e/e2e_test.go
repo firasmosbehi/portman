@@ -150,6 +150,44 @@ func TestE2E_InvalidCommand(t *testing.T) {
 	}
 }
 
+func TestE2E_Init(t *testing.T) {
+	dir := t.TempDir()
+	cmd := exec.Command(binaryPath, "init")
+	cmd.Dir = dir
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("unexpected error: %v, output: %s", err, out)
+	}
+	if !strings.Contains(string(out), "Created portman.yml") {
+		t.Errorf("expected 'Created portman.yml' in output, got: %s", out)
+	}
+
+	// Verify file exists
+	if _, err := os.Stat(filepath.Join(dir, "portman.yml")); err != nil {
+		t.Errorf("expected portman.yml to exist: %v", err)
+	}
+}
+
+func TestE2E_Find(t *testing.T) {
+	out, _, err := runBinary("find", "nonexistent-process-xyz")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "No process found") {
+		t.Errorf("expected 'No process found' in output, got: %s", out)
+	}
+}
+
+func TestE2E_FindJSON(t *testing.T) {
+	out, _, err := runBinary("find", "nonexistent", "--format", "json")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.HasPrefix(strings.TrimSpace(out), "[") {
+		t.Errorf("expected JSON array output, got: %s", out)
+	}
+}
+
 func TestE2E_RealHTTPPort(t *testing.T) {
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {

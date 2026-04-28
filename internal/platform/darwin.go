@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/firasmosbehi/portman/pkg/models"
 )
@@ -17,6 +18,19 @@ import (
 // lsofRunner abstracts the lsof command for testability.
 var lsofRunner = func() ([]byte, error) {
 	return exec.Command("lsof", "-i", "-P", "-n", "-F").Output()
+}
+
+// psEtimeRunner abstracts the ps command for testability.
+var psEtimeRunner = func(pid int) ([]byte, error) {
+	return exec.Command("ps", "-p", strconv.Itoa(pid), "-o", "etime=").Output()
+}
+
+func getProcessAge(pid int) (time.Duration, error) {
+	out, err := psEtimeRunner(pid)
+	if err != nil {
+		return 0, err
+	}
+	return parsePsEtime(string(out))
 }
 
 // Resolver implements port and process resolution for macOS.
@@ -126,6 +140,16 @@ func parseLsofOutput(r io.Reader) ([]models.PortProcess, error) {
 	}
 
 	flushPending(&results, &pending, pid, process, user)
+
+	// Populate age for each unique PID.
+	for i := range results {
+		if results[i].PID > 0 {
+			if age, err := getProcessAge(results[i].PID); err == nil {
+				results[i].Age = age
+			}
+		}
+	}
+
 	return results, scanner.Err()
 }
 

@@ -130,6 +130,27 @@ func TestPrintServiceStatusTable(t *testing.T) {
 	}
 }
 
+func TestFormatAge(t *testing.T) {
+	tests := []struct {
+		input    time.Duration
+		expected string
+	}{
+		{0, "-"},
+		{30 * time.Second, "30s"},
+		{45 * time.Minute, "45m"},
+		{2 * time.Hour, "2h"},
+		{25 * time.Hour, "1d"},
+		{72 * time.Hour, "3d"},
+	}
+
+	for _, tt := range tests {
+		got := FormatAge(tt.input)
+		if got != tt.expected {
+			t.Errorf("FormatAge(%v) = %q, want %q", tt.input, got, tt.expected)
+		}
+	}
+}
+
 func TestPrintServiceStatusTableAllHealthy(t *testing.T) {
 	_ = os.Setenv("NO_COLOR", "1")
 	defer func() { _ = os.Unsetenv("NO_COLOR") }()

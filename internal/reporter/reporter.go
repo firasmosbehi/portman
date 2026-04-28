@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/firasmosbehi/portman/pkg/models"
@@ -30,6 +31,23 @@ func NewReporterWithWriter(w io.Writer) *Reporter {
 	}
 }
 
+// FormatAge converts a duration to a human-readable string like "15m", "2h", "3d".
+func FormatAge(d time.Duration) string {
+	if d == 0 {
+		return "-"
+	}
+	if d < time.Minute {
+		return fmt.Sprintf("%ds", int(d.Seconds()))
+	}
+	if d < time.Hour {
+		return fmt.Sprintf("%dm", int(d.Minutes()))
+	}
+	if d < 24*time.Hour {
+		return fmt.Sprintf("%dh", int(d.Hours()))
+	}
+	return fmt.Sprintf("%dd", int(d.Hours()/24))
+}
+
 // PrintPortTable prints a table of port/process info.
 func (r *Reporter) PrintPortTable(ports []models.PortProcess) {
 	if os.Getenv("NO_COLOR") == "" {
@@ -42,7 +60,7 @@ func (r *Reporter) PrintPortTable(ports []models.PortProcess) {
 
 	for _, p := range ports {
 		_, _ = fmt.Fprintf(r.tw, "%d\t%s\t%s\t%d\t%s\t%s\n",
-			p.Port, p.Protocol, p.Process, p.PID, p.User, p.Age)
+			p.Port, p.Protocol, p.Process, p.PID, p.User, FormatAge(p.Age))
 	}
 
 	_ = r.tw.Flush()

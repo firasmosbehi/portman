@@ -38,6 +38,10 @@ func executeCommandStdin(stdin io.Reader, args ...string) (string, error) {
 	listFormatFlag = "table"
 	nextRangeFlag = "3000-3100"
 	watchIntervalFlag = 0
+	initForceFlag = false
+	initBlankFlag = false
+	findPIDFlag = 0
+	findFormatFlag = "table"
 	return buf.String(), err
 }
 
@@ -298,6 +302,107 @@ func TestVersionFlag(t *testing.T) {
 	}
 	if !strings.Contains(out, "portman") {
 		t.Errorf("unexpected output: %q", out)
+	}
+}
+
+func TestInitCmd(t *testing.T) {
+	dir := t.TempDir()
+	origWd, _ := os.Getwd()
+	_ = os.Chdir(dir)
+	defer func() { _ = os.Chdir(origWd) }()
+
+	out, err := executeCommand("init")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "Created portman.yml") {
+		t.Errorf("expected 'Created portman.yml' in output, got: %q", out)
+	}
+
+	content, err := os.ReadFile(filepath.Join(dir, "portman.yml"))
+	if err != nil {
+		t.Fatalf("expected portman.yml to exist: %v", err)
+	}
+	if !strings.Contains(string(content), "web") {
+		t.Error("expected portman.yml to contain sample web service")
+	}
+}
+
+func TestInitCmdAlreadyExists(t *testing.T) {
+	dir := t.TempDir()
+	origWd, _ := os.Getwd()
+	_ = os.Chdir(dir)
+	defer func() { _ = os.Chdir(origWd) }()
+
+	_ = os.WriteFile(filepath.Join(dir, "portman.yml"), []byte("services: []\n"), 0644)
+
+	_, err := executeCommand("init")
+	if err == nil {
+		t.Fatal("expected error when portman.yml already exists")
+	}
+	if !strings.Contains(err.Error(), "already exists") {
+		t.Errorf("expected 'already exists' error, got: %v", err)
+	}
+}
+
+func TestInitCmdForce(t *testing.T) {
+	dir := t.TempDir()
+	origWd, _ := os.Getwd()
+	_ = os.Chdir(dir)
+	defer func() { _ = os.Chdir(origWd) }()
+
+	_ = os.WriteFile(filepath.Join(dir, "portman.yml"), []byte("old"), 0644)
+
+	out, err := executeCommand("init", "--force")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "Created portman.yml") {
+		t.Errorf("expected 'Created portman.yml' in output, got: %q", out)
+	}
+}
+
+func TestInitCmdBlank(t *testing.T) {
+	dir := t.TempDir()
+	origWd, _ := os.Getwd()
+	_ = os.Chdir(dir)
+	defer func() { _ = os.Chdir(origWd) }()
+
+	out, err := executeCommand("init", "--blank")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "Created portman.yml") {
+		t.Errorf("expected 'Created portman.yml' in output, got: %q", out)
+	}
+
+	content, _ := os.ReadFile(filepath.Join(dir, "portman.yml"))
+	if strings.TrimSpace(string(content)) != "services: []" {
+		t.Errorf("expected blank template, got: %q", string(content))
+	}
+}
+
+func TestFindCmdMissingArg(t *testing.T) {
+	_, err := executeCommand("find")
+	if err == nil {
+		t.Fatal("expected error for missing argument")
+	}
+}
+
+func TestFindCmdJSON(t *testing.T) {
+	out, err := executeCommand("find", "nonexistent-process-xyz", "--format", "json")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.HasPrefix(strings.TrimSpace(out), "[") {
+		t.Errorf("expected JSON array output, got: %q", out)
+	}
+}
+
+func TestFindCmdPIDAndName(t *testing.T) {
+	_, err := executeCommand("find", "node", "--pid", "1234")
+	if err == nil {
+		t.Fatal("expected error when both name and --pid are specified")
 	}
 }
 

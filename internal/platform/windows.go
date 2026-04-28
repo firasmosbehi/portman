@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/firasmosbehi/portman/pkg/models"
 )
@@ -20,6 +21,19 @@ var netstatRunner = func() ([]byte, error) {
 // tasklistRunner abstracts the tasklist command for testability.
 var tasklistRunner = func() ([]byte, error) {
 	return exec.Command("tasklist", "/FO", "CSV").Output()
+}
+
+// wmicRunner abstracts the wmic command for testability.
+var wmicRunner = func(pid int) ([]byte, error) {
+	return exec.Command("wmic", "process", "where", fmt.Sprintf("ProcessId=%d", pid), "get", "CreationDate").Output()
+}
+
+func getProcessAge(pid int) (time.Duration, error) {
+	out, err := wmicRunner(pid)
+	if err != nil {
+		return 0, err
+	}
+	return parseWMICreationDate(string(out))
 }
 
 // Resolver implements port and process resolution for Windows.
@@ -50,6 +64,15 @@ func (r *Resolver) GetListeningPorts() ([]models.PortProcess, error) {
 				if name, ok := pidToName[ports[i].PID]; ok {
 					ports[i].Process = name
 				}
+			}
+		}
+	}
+
+	// Populate age for each unique PID.
+	for i := range ports {
+		if ports[i].PID > 0 {
+			if age, err := getProcessAge(ports[i].PID); err == nil {
+				ports[i].Age = age
 			}
 		}
 	}
