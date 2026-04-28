@@ -35,6 +35,7 @@ func executeCommandStdin(stdin io.Reader, args ...string) (string, error) {
 	// Reset persistent flags so they don't leak across tests.
 	killForceFlag = false
 	listPortFlag = 0
+	listFormatFlag = "table"
 	nextRangeFlag = "3000-3100"
 	watchIntervalFlag = 0
 	return buf.String(), err
@@ -116,6 +117,26 @@ func TestListCmdWithPort(t *testing.T) {
 	// Port 3000 may be in use (table) or free (message); both contain "3000".
 	if !strings.Contains(out, "3000") {
 		t.Errorf("unexpected output: %q", out)
+	}
+}
+
+func TestListCmdJSON(t *testing.T) {
+	out, err := executeCommand("list", "--format", "json")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.HasPrefix(strings.TrimSpace(out), "[") {
+		t.Errorf("expected JSON array output, got: %q", out)
+	}
+}
+
+func TestListCmdJSONPortNotFound(t *testing.T) {
+	out, err := executeCommand("list", "--port", "49999", "--format", "json")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if strings.TrimSpace(out) != "[]" {
+		t.Errorf("expected empty JSON array, got: %q", out)
 	}
 }
 

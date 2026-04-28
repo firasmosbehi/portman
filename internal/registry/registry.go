@@ -3,6 +3,7 @@ package registry
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"gopkg.in/yaml.v3"
 )
@@ -18,6 +19,30 @@ type Service struct {
 // Registry holds the parsed portman.yml configuration.
 type Registry struct {
 	Services []Service `yaml:"services"`
+}
+
+// Find walks up from the current directory looking for a portman.yml file.
+// Returns the absolute path to the file or an empty string if not found.
+func Find() (string, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	for {
+		path := filepath.Join(dir, "portman.yml")
+		if info, err := os.Stat(path); err == nil && !info.IsDir() {
+			return path, nil
+		}
+
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			break
+		}
+		dir = parent
+	}
+
+	return "", nil
 }
 
 // Load reads and parses a portman.yml file from the given path.

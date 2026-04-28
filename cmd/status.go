@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/firasmosbehi/portman/internal/health"
 	"github.com/firasmosbehi/portman/internal/registry"
@@ -16,14 +15,16 @@ var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Check project services against portman.yml registry",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// Look for portman.yml in current directory.
-		const fileName = "portman.yml"
-		if _, err := os.Stat(fileName); os.IsNotExist(err) {
-			_, _ = fmt.Fprintln(cmd.OutOrStdout(), "No portman.yml found in current directory.")
+		path, err := registry.Find()
+		if err != nil {
+			return err
+		}
+		if path == "" {
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), "No portman.yml found.")
 			return nil
 		}
 
-		reg, err := registry.Load(fileName)
+		reg, err := registry.Load(path)
 		if err != nil {
 			return err
 		}

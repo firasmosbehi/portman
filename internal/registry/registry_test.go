@@ -103,3 +103,63 @@ func TestLoadMissingPort(t *testing.T) {
 		t.Fatal("expected error for missing port")
 	}
 }
+
+func TestFindInCurrentDir(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "portman.yml")
+	if err := os.WriteFile(path, []byte("services:\n  - name: web\n    port: 3000\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	origDir, _ := os.Getwd()
+	_ = os.Chdir(dir)
+	defer func() { _ = os.Chdir(origDir) }()
+
+	found, err := Find()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if found == "" {
+		t.Fatal("expected to find portman.yml")
+	}
+}
+
+func TestFindInParentDir(t *testing.T) {
+	parent := t.TempDir()
+	child := filepath.Join(parent, "subdir")
+	if err := os.MkdirAll(child, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	path := filepath.Join(parent, "portman.yml")
+	if err := os.WriteFile(path, []byte("services:\n  - name: web\n    port: 3000\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	origDir, _ := os.Getwd()
+	_ = os.Chdir(child)
+	defer func() { _ = os.Chdir(origDir) }()
+
+	found, err := Find()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if found == "" {
+		t.Fatal("expected to find portman.yml in parent dir")
+	}
+}
+
+func TestFindNotFound(t *testing.T) {
+	dir := t.TempDir()
+	origDir, _ := os.Getwd()
+	_ = os.Chdir(dir)
+	defer func() { _ = os.Chdir(origDir) }()
+
+	found, err := Find()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if found != "" {
+		t.Fatalf("expected empty path, got %q", found)
+	}
+}
