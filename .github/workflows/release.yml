@@ -34,7 +34,7 @@ jobs:
           if [ "$HAS_BREW_TOKEN" = "true" ]; then
             echo "args=release --clean" >> "$GITHUB_OUTPUT"
           else
-            echo "args=release --clean --skip=brew" >> "$GITHUB_OUTPUT"
+            echo "args=release --clean --skip=homebrew" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Run GoReleaser
