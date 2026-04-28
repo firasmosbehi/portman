@@ -39,10 +39,13 @@ var watchCmd = &cobra.Command{
 			return nil
 		}
 
-		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Waiting for port %d... (press Ctrl+C to cancel)\n", port)
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Watching port %d... (press Ctrl+C to cancel)\n", port)
 
 		ticker := time.NewTicker(watchIntervalFlag)
 		defer ticker.Stop()
+
+		start := time.Now()
+		first := true
 
 		for {
 			select {
@@ -55,8 +58,16 @@ var watchCmd = &cobra.Command{
 					return err
 				}
 				if free {
-					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Port %d is now available\n", port)
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "\r✓ Port %d is now available\n", port)
 					return nil
+				}
+
+				elapsed := time.Since(start).Round(time.Second)
+				if first {
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "⏳ Port %d is still in use (waiting %s)...", port, elapsed)
+					first = false
+				} else {
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "\r⏳ Port %d is still in use (waiting %s)...", port, elapsed)
 				}
 			}
 		}

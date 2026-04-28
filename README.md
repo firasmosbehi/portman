@@ -13,12 +13,14 @@ When you're running multiple microservices locally, managing ports becomes a cho
 ## Features
 
 - **Cross-platform** — Works identically on macOS, Linux, and Windows
-- **List ports** — See all listening ports with process info in a clean, colorized table
+- **List ports** — See all listening ports with process info (including process age) in a clean, colorized table. Export as JSON too.
+- **Find ports** — Search listening ports by process name or PID
 - **Check ports** — Instantly know if a port is free or in use
 - **Kill by port** — Safely terminate processes with confirmation (`--force` to skip)
 - **Next port** — Find the next available port in a range
-- **Watch mode** — Poll a port and get notified when it's available
+- **Watch mode** — Poll a port and get live updates until it's available
 - **Project health** — Validate your `portman.yml` service registry
+- **Scaffold configs** — Generate a `portman.yml` with `portman init`
 
 ## Installation
 
@@ -48,6 +50,15 @@ portman list
 # Show only a specific port
 portman list --port 3000
 
+# Export as JSON
+portman list --format json
+
+# Find all ports used by a process
+portman find node
+
+# Find ports by exact PID
+portman find --pid 4521
+
 # Check if port 3000 is free
 portman check 3000
 
@@ -68,6 +79,12 @@ portman watch 3000 --interval 5s
 
 # Check project services defined in portman.yml
 portman status
+
+# Generate a sample portman.yml
+portman init
+
+# Generate an empty portman.yml
+portman init --blank
 ```
 
 ## Commands
@@ -76,6 +93,9 @@ portman status
 |---------|-------------|
 | `portman list` | List all listening ports with process info |
 | `portman list --port <port>` | Show only the specified port |
+| `portman list --format json` | Output as JSON instead of table |
+| `portman find <process>` | Find ports by process name (substring match) |
+| `portman find --pid <pid>` | Find ports by exact PID |
 | `portman check <port>` | Report if a port is free or in use |
 | `portman kill <port>` | Find and kill the process using a port |
 | `portman kill <port> --force` | Kill without confirmation |
@@ -84,6 +104,9 @@ portman status
 | `portman watch <port>` | Monitor a port until it becomes available |
 | `portman watch <port> --interval <duration>` | Set custom polling interval |
 | `portman status` | Check project services against `portman.yml` |
+| `portman init` | Generate a sample `portman.yml` |
+| `portman init --blank` | Generate an empty `portman.yml` |
+| `portman init --force` | Overwrite existing `portman.yml` |
 
 ## Project Registry
 
